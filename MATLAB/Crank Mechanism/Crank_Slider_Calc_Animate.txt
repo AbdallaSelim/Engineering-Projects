@@ -1,0 +1,64 @@
+clc
+clear
+close all
+
+l1 = 12;
+x_min = 50;
+x_max = 35;
+theta_init_deg = 0;
+
+[l2, theta_final_deg] = find_l2_crank_slider(l1, x_min, x_max, theta_init_deg);
+fprintf('Computed l2 = %.4f\n', l2);
+fprintf('Theta final = %.2f deg\n', theta_final_deg);
+
+theta_min = deg2rad(theta_init_deg);
+theta_max = deg2rad(theta_final_deg);
+theta_range = linspace(theta_min, theta_max, 300);
+
+figure;
+axis equal;
+grid on;
+xlabel('X'); ylabel('Y');
+title('Crank-Slider Mechanism');
+xlim([-l1 - 2, max(x_max, x_min) + 2]);
+ylim([-l1 - 2, l1 + 2]);
+hold on;
+
+crank_line = plot([0 0], [0 0], 'ro-', 'LineWidth', 2);
+link_line  = plot([0 0], [0 0], 'bo-', 'LineWidth', 2);
+slider     = plot(0, 0, 'ks', 'MarkerSize', 10, 'MarkerFaceColor', 'k');
+
+video_filename = 'crank_slider_simulation.mp4';
+v = VideoWriter(video_filename, 'MPEG-4');
+v.FrameRate = 30;
+open(v);
+
+for theta = theta_range
+    Ax = l1 * cos(theta);
+    Ay = l1 * sin(theta);
+    Bx = l1 * cos(theta) + sqrtSafe(l2^2 - l1^2 * sin(theta)^2);
+    By = 0;
+
+    set(crank_line, 'XData', [0 Ax], 'YData', [0 Ay]);
+    set(link_line, 'XData', [Ax Bx], 'YData', [Ay By]);
+    set(slider,    'XData', Bx, 'YData', By);
+
+    drawnow;
+    frame = getframe(gcf);
+    writeVideo(v, frame);
+end
+
+close(v);
+fprintf('Video saved to: %s\n', video_filename);
+
+function val = sqrtSafe(x)
+    if x < 0
+        if abs(x) < 1e-10
+            val = 0;
+        else
+            error('Negative sqrt encountered.');
+        end
+    else
+        val = sqrt(x);
+    end
+end

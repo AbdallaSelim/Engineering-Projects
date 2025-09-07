@@ -1,0 +1,57 @@
+#include <IRremote.hpp>     // IRremote v4.x
+#include <PWMServo.h>       // Replaces Servo.h to avoid Timer1 conflict
+
+const int IR_RECEIVE_PIN = 6;  // IR receiver signal pin
+const int SERVO_PIN = 9;       // Use pin 9 or 10 for PWMServo
+
+PWMServo servo;
+unsigned long lastCommandTime = 0;
+const unsigned long debounceDelay = 200;  // 200 ms debounce between IR reads
+
+void setup() {
+  servo.attach(SERVO_PIN);
+  servo.write(0);  // Start at 0°
+
+  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+
+  // Optional: Serial only if connected (for debugging)
+  Serial.begin(9600);
+  while (!Serial);  // Wait only if USB is connected
+  Serial.println("IR Servo Control Ready");
+}
+
+void loop() {
+  if (IrReceiver.decode()) {
+    uint32_t code = IrReceiver.decodedIRData.decodedRawData;
+
+    // Ignore repeat or noisy codes
+    if (code == 0xFFFFFFFF || code == 0x00000000) {
+      IrReceiver.resume();
+      return;
+    }
+
+    // Debounce: Ignore if too soon after last command
+    if (millis() - lastCommandTime < debounceDelay) {
+      IrReceiver.resume();
+      return;
+    }
+    lastCommandTime = millis();
+
+    // Debug: Print received code
+    Serial.print("IR code: 0x");
+    Serial.println(code, HEX);
+
+    // Action based on IR code
+    if (code == 0xA55AFF00) {  // RIGHT button
+      servo.write(90);
+      Serial.println("→ Moved to 90°");
+    } else if (code == 0xF708FF00) {  // LEFT button
+      servo.write(0);
+      Serial.println("→ Moved to 0°");
+    } else {
+      Serial.println("Unknown code");
+    }
+
+    IrReceiver.resume();  // Ready for next
+  }
+}

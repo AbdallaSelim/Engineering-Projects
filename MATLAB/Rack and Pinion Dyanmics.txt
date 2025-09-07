@@ -1,0 +1,25 @@
+clc
+clear
+close all
+m = 1.5;
+N = 20;
+Beta = 25;
+alpha = 20;
+T_n = 0.40;
+u = 0.2;
+Mass = 2.2;
+g = 9.81;
+Dp = N*m*10^-3 / cosd(Beta);
+rp = Dp/2;
+J = 0.0000054;
+a = ((T_n/rp)*(1 - tand(alpha) * cosd(Beta) * u) - Mass*g) / (J * (1 + 
+tand(alpha) * cosd(Beta) * u) + Mass);
+T = T_n - J*rp*a;
+Wt = T/rp;
+Wr = Wt * tand(alpha) * cosd(Beta);
+Normal = Wr;
+F_fr = Normal * u;
+plot(m,Wt);
+hold on, grid on, box on
+xlabel("Module");
+ylabel("Transmitted Load");

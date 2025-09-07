@@ -1,0 +1,30 @@
+function [l2, theta_final_deg] = find_l2_crank_slider(l1, x_min, x_max, theta_init_deg)
+    theta_init = deg2rad(theta_init_deg);
+    
+    term1 = x_min - l1 * cos(theta_init);
+    sin_term = l1 * sin(theta_init);
+    
+    if term1^2 < 0
+        error('Invalid configuration: cannot compute real l2.');
+    end
+    
+    l2_squared = term1^2 + sin_term^2;
+    l2 = sqrt(l2_squared);
+
+    theta_range = linspace(0, 2*pi, 10000);
+    x_vals = l1 * cos(theta_range) + sqrt(l2^2 - (l1 * sin(theta_range)).^2);
+
+    [~, idx] = min(abs(x_vals - x_max));
+    theta_final = theta_range(idx);
+    theta_final_deg = rad2deg(theta_final);
+
+    figure;
+    plot(rad2deg(theta_range), x_vals, 'b-', 'LineWidth', 1.5); hold on;
+    plot(theta_init_deg, x_min, 'go', 'MarkerSize', 8, 'DisplayName', 'Start');
+    plot(theta_final_deg, x_max, 'ro', 'MarkerSize', 8, 'DisplayName', 'End');
+    xlabel('Theta (deg)');
+    ylabel('Slider Position x');
+    title('Crank-Slider Position vs Theta');
+    legend show;
+    grid on;
+end

@@ -1,0 +1,51 @@
+#include <Servo.h>
+// Define the servo object
+Servo myServo;
+// Define parameters
+int initialPosition = 140; // Starting position of the servo
+int increment = 1; // Amount to move the servo per step
+int maxAttempts = 80; // Maximum number of attempts to grasp
+int tolerance = 1; // Tolerance for detecting when the servo is stalled
+int currentPosition;
+// Function to grasp object with feedback loop
+void graspObject() {
+ currentPosition = initialPosition;
+ myServo.write(currentPosition);
+ delay(500); // Allow some time for the servo to move
+ for (int attempt = 0; attempt < maxAttempts; attempt++) {
+ int previousPosition = currentPosition;
+ currentPosition -= increment;
+ myServo.write(currentPosition);
+ delay(25); // Allow some time for the servo to move
+ int newPosition = myServo.read(); // Read the current position of the servo
+ // Check if the servo's movement is below the expected increment
+ if (abs(newPosition - previousPosition) < tolerance) {
+ Serial.println("Object grasped or maximum resistance reached.");
+ break;
+ }
+ }
+}
+void setup() {
+ // Initialize serial communication
+ Serial.begin(9600);
+ 
+ // Attach the servo to pin 9
+ myServo.attach(A0);
+ 
+ // Move servo to initial position
+ myServo.write(initialPosition);
+ delay(1000); // Give some time to reach the initial position
+}
+void loop() {
+ // Command to grasp the object
+ graspObject();
+ 
+ // Delay before releasing
+ delay(2000);
+ 
+ // Command to release the object
+ myServo.write(initialPosition);
+ delay(1000); // Give some time to release the object
+ // Repeat the process with some delay
+ delay(3000);
+}
